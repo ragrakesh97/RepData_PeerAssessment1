@@ -24,7 +24,8 @@ The dataset is stored in a comma-separated-value (CSV) file and there are a tota
 # Loading and preprocessing the data
 ### Unzip data to obtain a csv file.
 
-```{r}
+
+```r
 if (!file.exists("activity.csv") )
 {
   dlurl <- 'http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip'  
@@ -34,7 +35,8 @@ if (!file.exists("activity.csv") )
 ```
 
 ### Reading csv Data into Data.Table.
-```{r}
+
+```r
 data <- data.table::fread("activity.csv")  
 ```
 
@@ -42,66 +44,92 @@ data <- data.table::fread("activity.csv")
 
 ### 1. Calculate the total number of steps taken per day
 
-```{r}
-steps_by_day <- aggregate(steps ~ date, data, sum)
 
+```r
+steps_by_day <- aggregate(steps ~ date, data, sum)
 ```
 
 ### 2. Make a histogram of the total number of steps taken each day. 
 
-```{r}
+
+```r
 hist(steps_by_day$steps, main = paste("Total Steps Each Day"), col="green",xlab="Number of Steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 ###  3. Calculate and report the mean and median of the total number of steps taken per day
-```{r}
+
+```r
 rmean <- mean(steps_by_day$steps)
 rmean
-
-rmedian <- median(steps_by_day$steps)
-rmedian
-
 ```
 
-median of the total number of steps taken per day:`r rmedian`
-mean of the total number of steps taken per day: `r rmean`
+```
+## [1] 10766.19
+```
+
+```r
+rmedian <- median(steps_by_day$steps)
+rmedian
+```
+
+```
+## [1] 10765
+```
+
+median of the total number of steps taken per day:10765
+mean of the total number of steps taken per day: 1.0766189\times 10^{4}
 
 
 # What is the average daily activity pattern?
 
 ### 1.Make a time series plot (i.e. \color{red}{\verb|type = "l"|}type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r}
+
+```r
 steps_by_interval <- aggregate(steps ~ interval, data, mean)
 plot(steps_by_interval$interval,steps_by_interval$steps, type="l", xlab="Interval", ylab="Number of Steps",main="Average Number of Steps per Day by Interval")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 ### 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r}
+
+```r
 max_interval <- steps_by_interval[which.max(steps_by_interval$steps),1]
 max_interval
 ```
 
-The interval with most steps is `r max_interval`
+```
+## [1] 835
+```
+
+The interval with most steps is 835
 
 
 # Imputing missing values
 
 ### 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with 𝙽𝙰s)
 
-```{r}
+
+```r
 NATotal <- sum(!complete.cases(data))
 NATotal
 ```
 
-Total Number of Missing values are `r NATotal`
+```
+## [1] 2304
+```
+
+Total Number of Missing values are 2304
 
 ### 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
 
 
-```{r}
+
+```r
 # Filling in missing values with median of dataset. 
 StepsAverage <- aggregate(steps ~ interval, data = data, FUN = mean)
 fillNA <- numeric()
@@ -118,41 +146,64 @@ for (i in 1:nrow(data)) {
 
 ### 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r}
+
+```r
 new_activity <- data
 new_activity$steps <- fillNA
 ```
 
 ### 4. Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
-```{r}
+
+```r
 StepsTotalUnion <- aggregate(steps ~ date, data = new_activity, sum, na.rm = TRUE)
 hist(StepsTotalUnion$steps, main = paste("Total Steps Each Day"), col="blue", xlab="Number of Steps")
 hist(steps_by_day$steps, main = paste("Total Steps Each Day"), col="green", xlab="Number of Steps", add=T)
 legend("topright", c("Imputed", "Non-imputed"), col=c("blue", "green"), lwd=10)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
 
+```r
 rmeantotal <- mean(StepsTotalUnion$steps)
 rmeantotal
+```
 
+```
+## [1] 10766.19
+```
 
+```r
 rmediantotal <- median(StepsTotalUnion$steps)
 rmediantotal
 ```
 
+```
+## [1] 10766.19
+```
+
 Do these values differ from the estimates from the first part of the assignment?
 
-```{r}
+
+```r
 rmediandiff <- rmediantotal - rmedian
 rmediandiff
+```
 
+```
+## [1] 1.188679
+```
 
-
+```r
 rmeandiff <- rmeantotal - rmean
 rmeandiff
 ```
 
-Ans. The mean(Mean Var: 0) is the same however the median does have a small variance(Median Var:`r rmediandiff`). between the total which includes the missing values to the base
+```
+## [1] 0
+```
+
+Ans. The mean(Mean Var: 0) is the same however the median does have a small variance(Median Var:1.1886792). between the total which includes the missing values to the base
 #What is the impact of imputing missing data on the estimates of the total daily number of steps?
 On observation the impact of the missing data has the biggest effect on the 10000 - 150000 step interval and changes frequency from 27.5 to 35 a variance of 7.5
 
@@ -161,17 +212,20 @@ On observation the impact of the missing data has the biggest effect on the 1000
 ### 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
 
-```{r}
+
+```r
 weekdays <- c("Monday", "Tuesday", "Wednesday", "Thursday", 
               "Friday")
 new_activity$dow = as.factor(ifelse(is.element(weekdays(as.Date(new_activity$date)),weekdays), "Weekday", "Weekend"))
 StepsTotalUnion <- aggregate(steps ~ interval + dow, new_activity, mean)
 ```
 ### 2.Make a panel plot containing a time series plot (i.e. \color{red}{\verb|type = "l"|}type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
-```{R}
+
+```r
 library(lattice)
 xyplot(StepsTotalUnion$steps ~ StepsTotalUnion$interval|StepsTotalUnion$dow, main="Average Steps per Day by Interval",xlab="Interval", ylab="Steps",layout=c(1,2), type="l")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-14-1.png)<!-- -->
 
 
